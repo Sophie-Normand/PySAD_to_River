@@ -1,6 +1,6 @@
 class LODA(anomaly.base.AnomalyDetector):
 
-	def __init__(self, num_bins=10, num_random_cuts=100):
+    def __init__(self, num_bins=10, num_random_cuts=100):
         self.to_init = True
         self.n_bins = num_bins
         self.n_random_cuts = num_random_cuts
