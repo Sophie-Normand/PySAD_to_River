@@ -15,6 +15,7 @@ __all__ = [
     "clamp",
     "dot",
     "dotvecmat",
+    "get_minmax_array"
     "matmul2d",
     "minkowski_distance",
     "norm",
@@ -27,6 +28,23 @@ __all__ = [
     "woodbury_matrix",
 ]
 
+##################################################################################
+###ADD_THIS_FUNCTION_FOR_XSTREAM##################################################
+
+def get_minmax_array(X):
+"""Utility method that returns the boundaries for each feature of the input array.
+    Args:
+        X (np.float array of shape (num_instances, num_features)): The input array.
+    Returns:
+        min (np.float array of shape (num_features,)): Minimum values for each feature in array.
+        max (np.float array of shape (num_features,)): Maximum values for each feature in array.
+    """
+    min = np.min(X, axis=0)
+    max = np.max(X, axis=0)
+
+    return min, max
+    
+##################################################################################
 
 def dotvecmat(x, A):
     """Vector times matrix from left side, i.e. transpose(x)A.

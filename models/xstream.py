@@ -1,9 +1,13 @@
 import anomaly
+import math        #import math pour utiliser get_minmax_array
+
+import utils
+
 import numpy as np
 
 
 from pysad.transform.projection.streamhash_projector import StreamhashProjector
-from pysad.utils import get_minmax_array
+#from pysad.utils import get_minmax_array
 
 
 class xStream(BaseModel):
