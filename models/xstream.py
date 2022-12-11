@@ -6,7 +6,7 @@ import utils
 import numpy as np
 
 
-from pysad.transform.projection.streamhash_projector import StreamhashProjector
+from transform.projection.streamhash_projector import StreamhashProjector
 #from pysad.utils import get_minmax_array
 
 
@@ -38,7 +38,7 @@ class xStream(BaseModel):
         self.cur_window = []
         self.ref_window = None
 
-    def fit_partial(self, X, y=None):
+    def learn_one(self, X, y=None):
         """Fits the model to next instance.
         Args:
             X (np.float array of shape (num_features,)): The instance to fit.
@@ -64,7 +64,7 @@ class xStream(BaseModel):
 
         return self
 
-    def score_partial(self, X):
+    def score_one(self, X):
         """Scores the anomalousness of the next instance.
         Args:
             X (np.float array of shape (num_features,)): The instance to score. Higher scores represent more anomalous instances whereas lower scores correspond to more normal instances.
