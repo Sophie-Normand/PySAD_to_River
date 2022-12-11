@@ -1,8 +1,9 @@
+import anomaly
 import numpy as np
-from pysad.core.base_transformer import BaseTransformer
+#from pysad.core.base_transformer import BaseTransformer
 
 
-class StreamhashProjector(BaseTransformer):
+class StreamhashProjector(anomaly.base_transformer.BaseTransformer):
     """Streamhash projection method  from Manzoor et. al.that is similar (or equivalent) to SparseRandomProjection. :cite:`xstream` The implementation is taken from the `cmuxstream-core repository <https://github.com/cmuxstream/cmuxstream-core>`_.
         Args:
             num_components (int): The number of dimensions that the target will be projected into.
@@ -16,7 +17,7 @@ class StreamhashProjector(BaseTransformer):
         self.density = density
         self.n_components = num_components
 
-    def fit_partial(self, X):
+    def learn_one(self, X):
         """Fits particular (next) timestep's features to train the projector.
         Args:
             X (np.float array of shape (n_components,)): Input feature vector.
@@ -25,7 +26,7 @@ class StreamhashProjector(BaseTransformer):
         """
         return self
 
-    def transform_partial(self, X):
+    def transform_one(self, X):
         """Projects particular (next) timestep's vector to (possibly) lower dimensional space.
         Args:
             X (np.float array of shape (num_features,)): Input feature vector.

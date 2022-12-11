@@ -37,6 +37,38 @@ class AnomalyDetector(base.Estimator):
         An anomaly score. A high score is indicative of an anomaly. A low score corresponds a
         normal observation.
         """
+        
+    ###########################################################################################
+    ###### A AJOUTER POUR XSTREAM #############################################################
+    
+    def learn(self, X, y=None):
+        """Fits the model to all instances in order.
+        Args:
+            X (np.float array of shape (num_instances, num_features)): The instances in order to fit.
+            y (int): The labels of the instances in order to fit (Optional for unsupervised models, default=None).
+        Returns:
+            object: Fitted model.
+        """
+        for xi, yi in _iterate(X, y):
+            self.learn_one(xi, yi)
+
+        return self
+        
+    def score(self, X):
+        """Scores all instaces via score_partial iteratively.
+        Args:
+            X (np.float array of shape (num_instances, num_features)): The instances in order to score.
+        Returns:
+            np.float array of shape (num_instances,): The anomalousness scores of the instances in order.
+        """
+        y_pred = np.empty(X.shape[0], dtype=np.float)
+        for i, (xi, _) in enumerate(_iterate(X)):
+            y_pred[i] = self.score_partial(xi)
+
+        return y_pred
+    
+    ###########################################################################################
+        
 
 
 class SupervisedAnomalyDetector(base.Estimator):

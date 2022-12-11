@@ -10,7 +10,7 @@ from transform.projection.streamhash_projector import StreamhashProjector
 #from pysad.utils import get_minmax_array
 
 
-class xStream(BaseModel):
+class xStream(anomaly.base.AnomalyDetector):
     """The xStream model for row-streaming data :cite:`xstream`. It first projects the data via streamhash projection. It then fits half space chains by reference windowing. It scores the instances using the window fitted to the reference window.
     Args:
         n_components (int): The number of components for streamhash projection (Default=100).
@@ -48,7 +48,7 @@ class xStream(BaseModel):
         """
         self.step += 1
 
-        X = self.streamhash.fit_transform_partial(X)
+        X = self.streamhash.learn_transform_one(X)
 
         X = X.reshape(1, -1)
         self.cur_window.append(X)
@@ -71,7 +71,7 @@ class xStream(BaseModel):
         Returns:
             score (float): The anomalousness score of the input instance.
         """
-        X = self.streamhash.fit_transform_partial(X)
+        X = self.streamhash.learn_transform_one(X)
         X = X.reshape(1, -1)
         score = self.hs_chains.score(X).flatten()
 
@@ -104,7 +104,7 @@ class _Chain:
 
         self.is_first_window = True
 
-    def fit(self, X):
+    def learn(self, X):								#ajouter fit dans le AnomalyDetector
         prebins = np.zeros(X.shape, dtype=np.float)
         depthcount = np.zeros(len(self.deltamax), dtype=np.int)
         for depth in range(self.depth):

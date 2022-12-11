@@ -10,6 +10,7 @@ import numpy as np
 import scipy as sp
 
 __all__ = [
+    "_iterate"
     "argmax",
     "chain_dot",
     "clamp",
@@ -44,6 +45,21 @@ def get_minmax_array(X):
 
     return min, max
     
+def _iterate(X, y=None):
+    """Iterates array of features and possibly labels.
+    Args:
+        X (np.array of shape (num_instances, num_features)): The features array.
+        y (np.array of shape (num_instances, ): The array containing labels (Default=None).
+    """
+
+    iterator = ArrayStreamer(shuffle=False)
+
+    if y is None:
+        for xi in iterator.iter(X):
+            yield xi, None
+    else:
+        for xi, yi in iterator.iter(X, y):
+            yield xi, yi
 ##################################################################################
 
 def dotvecmat(x, A):
