@@ -1,5 +1,7 @@
+import anomaly
 import numpy as np
-from pysad.core.base_model import BaseModel
+
+
 from pysad.transform.projection.streamhash_projector import StreamhashProjector
 from pysad.utils import get_minmax_array
 
