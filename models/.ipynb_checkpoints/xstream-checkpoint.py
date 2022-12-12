@@ -1,7 +1,9 @@
 import anomaly
-import math        #import math pour utiliser get_minmax_array
-
+        
 import utils
+import math     #import math pour utiliser get_minmax_array
+
+from utils import get_minmax_array
 
 import numpy as np
 
