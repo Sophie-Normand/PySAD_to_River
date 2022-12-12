@@ -58,7 +58,7 @@ class BaseTransformer(ABC):
 
         return transformed_X
 
-    def learn(self, X):
+    def fit(self, X):
         """Shortcut method that iteratively applies fit_partial to all instances in order.
         Args:
             X (np.float array of shape (num_instances, num_features)): Input feature vectors.

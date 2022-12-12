@@ -53,7 +53,7 @@ class xStream(anomaly.base.AnomalyDetector):
         X = X.reshape(1, -1)
         self.cur_window.append(X)
 
-        self.hs_chains.learn(X)
+        self.hs_chains.fit(X)
 
         if self.step % self.window_size == 0:
             self.ref_window = self.cur_window
@@ -104,7 +104,7 @@ class _Chain:
 
         self.is_first_window = True
 
-    def learn(self, X):								#ajouter fit dans le AnomalyDetector
+    def fit(self, X):								#ajouter fit dans le AnomalyDetector
         prebins = np.zeros(X.shape, dtype=np.float)
         depthcount = np.zeros(len(self.deltamax), dtype=np.int)
         for depth in range(self.depth):
@@ -199,9 +199,9 @@ class _HSChains:
         scores /= float(self.nchains)
         return scores
 
-    def learn(self, X):
+    def fit(self, X):
         for ch in self.chains:
-            ch.learn(X)
+            ch.fit(X)
 
     def next_window(self):
         for ch in self.chains:
