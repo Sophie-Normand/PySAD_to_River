@@ -41,7 +41,7 @@ class AnomalyDetector(base.Estimator):
     ###########################################################################################
     ###### A AJOUTER POUR XSTREAM #############################################################
     
-    def learn(self, X, y=None):
+    def fit(self, X, y=None):
         """Fits the model to all instances in order.
         Args:
             X (np.float array of shape (num_instances, num_features)): The instances in order to fit.
