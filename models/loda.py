@@ -16,7 +16,7 @@ class LODA(anomaly.base.AnomalyDetector):
         Returns:
             object: Returns the self.
         """
-
+# comment push
         X = X.reshape(1, -1)
 
         for i in range(self.n_random_cuts):
