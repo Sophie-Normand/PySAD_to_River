@@ -4,7 +4,7 @@ import utils
 import math     #import math pour utiliser get_minmax_array
 
 from utils import get_minmax_array
-
+from river.utils import dict2numpy
 import numpy as np
 
 
@@ -40,7 +40,7 @@ class xStream(anomaly.base.AnomalyDetector):
         self.cur_window = []
         self.ref_window = None
 
-    def learn_one(self, X, y=None):
+    def learn_one(self, x, y=None):
         """Fits the model to next instance.
         Args:
             X (np.float array of shape (num_features,)): The instance to fit.
@@ -50,12 +50,15 @@ class xStream(anomaly.base.AnomalyDetector):
         """
         self.step += 1
 
-        X = self.streamhash.learn_transform_one(X)
+        #X = self.streamhash.learn_transform_one(X)
+        x_array = dict2numpy(x)
+        x_array = self.streamhash.learn_transform_one(x_array)
 
-        X = X.reshape(1, -1)
-        self.cur_window.append(X)
+        #X = X.reshape(1, -1)
+        x_array = x_array.reshape(1,-1)
+        self.cur_window.append(x_array)
 
-        self.hs_chains.fit(X)
+        self.hs_chains.fit(x_array)
 
         if self.step % self.window_size == 0:
             self.ref_window = self.cur_window
@@ -66,16 +69,18 @@ class xStream(anomaly.base.AnomalyDetector):
 
         return self
 
-    def score_one(self, X):
+    def score_one(self, x):
         """Scores the anomalousness of the next instance.
         Args:
             X (np.float array of shape (num_features,)): The instance to score. Higher scores represent more anomalous instances whereas lower scores correspond to more normal instances.
         Returns:
             score (float): The anomalousness score of the input instance.
         """
-        X = self.streamhash.learn_transform_one(X)
-        X = X.reshape(1, -1)
-        score = self.hs_chains.score(X).flatten()
+        x_array = dict2numpy(x)
+        x_array = self.streamhash.learn_transform_one(x_array)
+        #X = X.reshape(1, -1)
+        x_array = x_array.reshape(1,-1)
+        score = self.hs_chains.score(x_array).flatten()
 
         return score
 
@@ -106,15 +111,15 @@ class _Chain:
 
         self.is_first_window = True
 
-    def fit(self, X):								#ajouter fit dans le AnomalyDetector
-        prebins = np.zeros(X.shape, dtype=np.float)
+    def fit(self, x):								#ajouter fit dans le AnomalyDetector
+        prebins = np.zeros(x.shape, dtype=np.float)
         depthcount = np.zeros(len(self.deltamax), dtype=np.int)
         for depth in range(self.depth):
             f = self.fs[depth]
             depthcount[f] += 1
 
             if depthcount[f] == 1:
-                prebins[:, f] = (X[:, f] + self.shift[f]) / self.deltamax[f]
+                prebins[:, f] = (x[:, f] + self.shift[f]) / self.deltamax[f]
             else:
                 prebins[:, f] = 2.0 * prebins[:, f] - \
                     self.shift[f] / self.deltamax[f]
@@ -144,16 +149,16 @@ class _Chain:
 
         return self
 
-    def bincount(self, X):
-        scores = np.zeros((X.shape[0], self.depth))
-        prebins = np.zeros(X.shape, dtype=np.float)
+    def bincount(self, x):
+        scores = np.zeros((x.shape[0], self.depth))
+        prebins = np.zeros(x.shape, dtype=np.float)
         depthcount = np.zeros(len(self.deltamax), dtype=np.int)
         for depth in range(self.depth):
             f = self.fs[depth]
             depthcount[f] += 1
 
             if depthcount[f] == 1:
-                prebins[:, f] = (X[:, f] + self.shift[f]) / self.deltamax[f]
+                prebins[:, f] = (x[:, f] + self.shift[f]) / self.deltamax[f]
             else:
                 prebins[:, f] = 2.0 * prebins[:, f] - \
                     self.shift[f] / self.deltamax[f]
@@ -168,10 +173,10 @@ class _Chain:
 
         return scores
 
-    def score(self, X):
+    def score(self, x):
         # scale score logarithmically to avoid overflow:
         #    score = min_d [ log2(bincount x 2^d) = log2(bincount) + d ]
-        scores = self.bincount(X)
+        scores = self.bincount(x)
         depths = np.array([d for d in range(1, self.depth + 1)])
         scores = np.log2(1.0 + scores) + depths  # add 1 to avoid log(0)
         return -np.min(scores, axis=1)
@@ -193,17 +198,17 @@ class _HSChains:
             c = _Chain(deltamax=deltamax, depth=self.depth)
             self.chains.append(c)
 
-    def score(self, X):
-        scores = np.zeros(X.shape[0])
+    def score(self, x):
+        scores = np.zeros(x.shape[0])
         for ch in self.chains:
-            scores += ch.score(X)
+            scores += ch.score(x)
 
         scores /= float(self.nchains)
         return scores
 
-    def fit(self, X):
+    def fit(self, x):
         for ch in self.chains:
-            ch.fit(X)
+            ch.fit(x)
 
     def next_window(self):
         for ch in self.chains:
