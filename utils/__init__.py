@@ -1,5 +1,6 @@
 """Shared utility classes and functions"""
-from . import math
+#from . import math
+from .math import get_minmax_array
 #from . import inspect, math, pretty, random, skmultiflow_utils
 #from .context_managers import log_method_calls
 #from .data_conversion import dict2numpy, numpy2dict
@@ -8,26 +9,26 @@ from . import math
 #from .sorted_window import SortedWindow
 #from .vectordict import VectorDict
 
-#__all__ = [
-#    "dict2numpy",
-#    "expand_param_grid",
-#    "inspect",
-#    "log_method_calls",
-#    "math",
-#    "pretty",
-#    "numpy2dict",
-#    "random",
-#    "skmultiflow_utils",
-#    "Rolling",
-#    "SortedWindow",
-#    "VectorDict",
-#    "TimeRolling",
-#]
+__all__ = [
+    "dict2numpy",
+    "expand_param_grid",
+    "inspect",
+    "log_method_calls",
+    "math",
+    "pretty",
+    "numpy2dict",
+    "random",
+    "skmultiflow_utils",
+    "Rolling",
+    "SortedWindow",
+    "VectorDict",
+    "TimeRolling",
+]
 
-__all__ = ["get_minmax_array"]
+#__all__ = ["get_minmax_array"]
 
 import numpy as np
-
+'''
 def get_minmax_array(X):
     """Utility method that returns the boundaries for each feature of the input array.
     Args:
@@ -39,4 +40,4 @@ def get_minmax_array(X):
     min = np.min(X, axis=0)
     max = np.max(X, axis=0)
 
-    return min, max
+    return min, max'''

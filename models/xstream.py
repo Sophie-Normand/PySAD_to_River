@@ -1,9 +1,9 @@
 import anomaly
         
-import utils
-import math     #import math pour utiliser get_minmax_array
+from utils.math import get_minmax_array
+#import math     #import math pour utiliser get_minmax_array
 
-from utils import get_minmax_array
+#from utils import get_minmax_array
 from river.utils import dict2numpy
 import numpy as np
 
