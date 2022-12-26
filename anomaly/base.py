@@ -32,7 +32,6 @@ class AnomalyDetector(base.Estimator):
     def score_one(self, x: dict) -> float:
         """Return an outlier score.
         
-        
         A high score is indicative of an anomaly. A low score corresponds to a normal observation.
         
         Parameters
