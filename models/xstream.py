@@ -14,11 +14,17 @@ from transform.projection.streamhash_projector import StreamhashProjector
 
 class xStream(anomaly.base.AnomalyDetector):
     """The xStream model for row-streaming data :cite:`xstream`. It first projects the data via streamhash projection. It then fits half space chains by reference windowing. It scores the instances using the window fitted to the reference window.
-    Args:
-        n_components (int): The number of components for streamhash projection (Default=100).
-        n_chains (int): The number of half-space chains (Default=100).
-        depth (int): The maximum depth for the chains (Default=25).
-        window_size (int): The size (and the sliding length) of the reference window (Default=25).
+    
+    Parameters
+    ----------
+    n_components
+        Number of components for streamhash projection (Default=100).
+    n_chains
+        Number of half-space chains (Default=100).
+    depth
+        Maximum depth for the chains (Default=25).
+    window_size 
+        Size (and the sliding length) of the reference window (Default=25).
     """
 
     def __init__(
@@ -42,11 +48,13 @@ class xStream(anomaly.base.AnomalyDetector):
 
     def learn_one(self, x, y=None):
         """Fits the model to next instance.
-        Args:
-            X (np.float array of shape (num_features,)): The instance to fit.
-            y (int): Ignored since the model is unsupervised (Default=None).
-        Returns:
-            object: Returns the self.
+        
+        Parameters
+        ----------
+        X
+            Instance to learn.
+        y
+            Ignored since the model is unsupervised (Default=None).
         """
         self.step += 1
 
@@ -71,10 +79,11 @@ class xStream(anomaly.base.AnomalyDetector):
 
     def score_one(self, x):
         """Scores the anomalousness of the next instance.
-        Args:
-            X (np.float array of shape (num_features,)): The instance to score. Higher scores represent more anomalous instances whereas lower scores correspond to more normal instances.
-        Returns:
-            score (float): The anomalousness score of the input instance.
+        
+        Parameters
+        ----------
+        X 
+            Instance to score. Higher scores represent more anomalous instances whereas lower scores correspond to more normal instances.
         """
         x_array = dict2numpy(x)
         x_array = self.streamhash.learn_transform_one(x_array)
