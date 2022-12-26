@@ -5,6 +5,7 @@ from utils.math import get_minmax_array
 
 #from utils import get_minmax_array
 from river.utils import dict2numpy
+from river.utils import numpy2dict
 import numpy as np
 
 
@@ -60,7 +61,9 @@ class xStream(anomaly.base.AnomalyDetector):
 
         #X = self.streamhash.learn_transform_one(X)
         x_array = dict2numpy(x)
-        x_array = self.streamhash.learn_transform_one(x_array)
+        X = numpy2dict(x_array)
+        X = self.streamhash.learn_one(X)
+        x_array = self.streamhash.transform_one(X)
 
         #X = X.reshape(1, -1)
         x_array = x_array.reshape(1,-1)
@@ -86,7 +89,9 @@ class xStream(anomaly.base.AnomalyDetector):
             Instance to score. Higher scores represent more anomalous instances whereas lower scores correspond to more normal instances.
         """
         x_array = dict2numpy(x)
-        x_array = self.streamhash.learn_transform_one(x_array)
+        X = numpy2dict(x_array)
+        X = self.streamhash.learn_one(X)
+        x_array = self.streamhash.transform_one(X)
         #X = X.reshape(1, -1)
         x_array = x_array.reshape(1,-1)
         score = self.hs_chains.score(x_array).flatten()

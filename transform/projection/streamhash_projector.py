@@ -1,13 +1,20 @@
-from anomaly.base_transformer import BaseTransformer
+#from anomaly.base_transformer import BaseTransformer
 import numpy as np
 #from pysad.core.base_transformer import BaseTransformer
+from river.utils import dict2numpy
 
+from base.transformer import BaseTransformer
 
 class StreamhashProjector(BaseTransformer):
     """Streamhash projection method  from Manzoor et. al.that is similar (or equivalent) to SparseRandomProjection. :cite:`xstream` The implementation is taken from the `cmuxstream-core repository <https://github.com/cmuxstream/cmuxstream-core>`_.
-        Args:
-            num_components (int): The number of dimensions that the target will be projected into.
-            density (float): Density parameter of the streamhash projection.
+        
+    Parameters
+    ----------
+    num_components 
+        Number of dimensions that the target will be projected into.
+    density
+        Density parameter of the streamhash projection.
+
     """
 
     def __init__(self, num_components, density=1 / 3.0):
@@ -18,21 +25,32 @@ class StreamhashProjector(BaseTransformer):
         self.n_components = num_components
 
     def learn_one(self, X):
-        """Fits particular (next) timestep's features to train the projector.
-        Args:
-            X (np.float array of shape (n_components,)): Input feature vector.
-        Returns:
-            object: self.
+        """Learn particular (next) timestep's features to train the projector.
+        
+        Parameters
+        ----------
+        X 
+            Input feature vector.
+        
         """
-        return self
+
+        return X
 
     def transform_one(self, X):
         """Projects particular (next) timestep's vector to (possibly) lower dimensional space.
-        Args:
-            X (np.float array of shape (num_features,)): Input feature vector.
-        Returns:
-            projected_X (np.float array of shape (num_components,)): Projected feature vector.
+        
+        Parameters
+        ----------
+        X 
+            Input feature vector.
+
+        Returns
+        -------
+        projected_X 
+            Projected feature vector.
         """
+        
+        X = dict2numpy(X)
         X = X.reshape(1, -1)
 
         ndim = X.shape[1]

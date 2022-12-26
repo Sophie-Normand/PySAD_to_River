@@ -5,7 +5,7 @@ import numpy as np
 import math
 import utils
 
-#from pysad.utils import _iterate
+from utils.math import _iterate
 
 
 class BaseTransformer(ABC):
