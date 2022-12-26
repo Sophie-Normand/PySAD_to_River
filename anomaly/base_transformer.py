@@ -36,7 +36,7 @@ class BaseTransformer(ABC):
         pass
 
     def learn_transform_one(self, X):
-        """Shortcut method that iteratively applies fit_partial and transform_partial, respectively.
+        """Shortcut method that iteratively applies learn_one and transform_one, respectively.
         Args:
             X (np.float array of shape (num_components,)): Input feature vector.
         Returns:
@@ -45,7 +45,7 @@ class BaseTransformer(ABC):
         return self.learn_one(X).transform_one(X)
 
     def transform(self, X):
-        """Shortcut method that iteratively applies transform_partial to all instances in order.
+        """Shortcut method that iteratively applies transform_one to all instances in order.
         Args:
             X (np.float array of shape (num_instances, num_features)): Input feature vectors.
         Returns:
@@ -59,7 +59,7 @@ class BaseTransformer(ABC):
         return transformed_X
 
     def fit(self, X):
-        """Shortcut method that iteratively applies fit_partial to all instances in order.
+        """Shortcut method that iteratively applies learn_one to all instances in order.
         Args:
             X (np.float array of shape (num_instances, num_features)): Input feature vectors.
         Returns:
@@ -71,7 +71,7 @@ class BaseTransformer(ABC):
         return self
 
     def learn_transform(self, X):
-        """Shortcut method that iteratively applies fit_transform_partial to all instances in order.
+        """Shortcut method that iteratively applies learn_transform_one to all instances in order.
         Args:
             X (np.float array of shape (num_instances, num_components)): Input feature vectors.
         Returns:
