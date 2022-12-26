@@ -26,6 +26,7 @@ class xStream(anomaly.base.AnomalyDetector):
         Maximum depth for the chains (Default=25).
     window_size 
         Size (and the sliding length) of the reference window (Default=25).
+    
     """
 
     def __init__(
@@ -56,13 +57,14 @@ class xStream(anomaly.base.AnomalyDetector):
             Instance to learn.
         y
             Ignored since the model is unsupervised (Default=None).
+        
         """
         self.step += 1
 
         #X = self.streamhash.learn_transform_one(X)
-        x_array = dict2numpy(x)
-        X = numpy2dict(x_array)
-        X = self.streamhash.learn_one(X)
+    #    x_array = dict2numpy(x)
+    #    X = numpy2dict(x_array)
+        X = self.streamhash.learn_one(x)
         x_array = self.streamhash.transform_one(X)
 
         #X = X.reshape(1, -1)
@@ -87,10 +89,11 @@ class xStream(anomaly.base.AnomalyDetector):
         ----------
         X 
             Instance to score. Higher scores represent more anomalous instances whereas lower scores correspond to more normal instances.
+        
         """
-        x_array = dict2numpy(x)
-        X = numpy2dict(x_array)
-        X = self.streamhash.learn_one(X)
+    #    x_array = dict2numpy(x)
+    #    X = numpy2dict(x_array)
+        X = self.streamhash.learn_one(x)
         x_array = self.streamhash.transform_one(X)
         #X = X.reshape(1, -1)
         x_array = x_array.reshape(1,-1)
@@ -112,6 +115,7 @@ class xStream(anomaly.base.AnomalyDetector):
 class _Chain:
 
     def __init__(self, deltamax, depth):
+        
         k = len(deltamax)
 
         self.depth = depth

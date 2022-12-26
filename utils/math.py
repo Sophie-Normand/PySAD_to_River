@@ -42,12 +42,44 @@ def get_minmax_array(X):
     Parameters
     ----------
     X
+	
 	"""
-	min = np.min(X, axis=0)
-	max = np.max(X, axis=0)
+	minimum = [min([element[i] for element in X]) for i in range(X.shape[1])]
+	maximum = [max([element[i] for element in X]) for i in range(X.shape[1])]
 
-	return min, max
-    
+	return np.array(minimum), np.array(maximum)
+
+
+def get_minmax_array_dico(A):
+    """returns the boundaries for each feature
+
+    Parameters
+    ----------
+    A
+
+    Examples
+    --------
+
+    >>> from river import utils
+
+    >>> A = {
+    ...     (0, 0): 2, (0, 1): 0, (0, 2): 4
+    ...     (1, 0): 5, (1, 1): 6, (1, 2): 0
+    ... }
+
+    >>> mini, maxi = utils.math.get_minmax_array_dico(A)
+    >>> print(mini, maxi)
+    {0: 2, 1: 0, 2: 0} {0: 5, 1: 6, 2: 4}
+
+    """
+    mini = {}
+    maxi = {}
+    for j in range(list(A.keys())[-1][1]+1):
+        mini[j] = min([A[i,j] for i in range(list(A.keys())[-1][0]+1)])
+        maxi[j] = max([A[i,j] for i in range(list(A.keys())[-1][0]+1)])
+    return mini, maxi
+
+
 def _iterate(X, y=None):
     """Iterates array of features and possibly labels.
 
@@ -55,6 +87,7 @@ def _iterate(X, y=None):
     ----------
     X
     y
+    
     """
 
     iterator = iter_array(shuffle=False)  #IL FAUT IMPORTER ArrayStreamer !!!!
@@ -390,3 +423,4 @@ def woodbury_matrix(A: np.ndarray, U: np.ndarray, V: np.ndarray):
     eye = np.eye(len(V))
     Au = A @ U
     A -= Au @ np.linalg.inv(eye + V @ Au) @ V @ A
+    
