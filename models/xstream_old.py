@@ -8,7 +8,7 @@ from river.utils import dict2numpy
 import numpy as np
 
 
-from transform.projection.streamhash_projector import StreamhashProjector
+from transform.projection.streamhash_projector_old import StreamhashProjector
 #from pysad.utils import get_minmax_array
 
 
@@ -87,6 +87,10 @@ class xStream_old(anomaly.base.AnomalyDetector):
     def _compute_deltamax(self):
         # mx = np.max(np.concatenate(self.ref_window, axis=0), axis=0)
         # mn = np.min(np.concatenate(self.ref_window, axis=0), axis=0)
+    #    print(self.ref_window)
+        print(len(self.ref_window))
+        print(len(np.concatenate(self.ref_window, axis=0)))
+    #    print(np.concatenate(self.ref_window, axis=0).shape)
         mn, mx = get_minmax_array(np.concatenate(self.ref_window, axis=0))
 
         deltamax = (mx - mn) / 2.0

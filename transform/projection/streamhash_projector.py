@@ -60,26 +60,40 @@ class StreamhashProjector(BaseTransformer):
     #    print(X)
 
     #    ndim = X.shape[1]
+    #    print(X)
+        X_array = dict2numpy(X)
+        X_array = X_array.reshape(1, -1)
+    #    print(X_array)
+    #    print(X_array.shape)
 
         ndim = len(X)
 
         feature_names = [str(i) for i in range(ndim)]
 
-        R = np.array([[self._hash_string(k, f)
+        R_array = np.array([[self._hash_string(k, f)
                        for f in feature_names]
                       for k in self.keys])
-        
+
+        R = {}
+        for k in self.keys:
+            for f in feature_names:
+                R[(k,f)] = self._hash_string(k,f)
+
+
+    #    print(R_array)
+    #    print(R_array.shape)
     #    print(R)
 
     #    R = numpy2dict(R)
 
-        X = dict2numpy(X)
-        X = X.reshape(1, -1)
+        
 
-        Y = np.dot(X, R.T).squeeze()
+        Y_array = np.dot(X_array, R_array.T).squeeze()
     #    Y = dot(X,R)
-    #    Y = dotvecmat(X, R)
+    #    print(X)
+        Y = dotvecmat(X, R)
 
+    #    print(Y_array)
     #    print(Y)
 
 

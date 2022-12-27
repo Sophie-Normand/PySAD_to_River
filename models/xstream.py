@@ -1,6 +1,7 @@
 import anomaly
         
 from utils.math import get_minmax_array
+from utils.math import get_minmax_array_dico
 #import math     #import math pour utiliser get_minmax_array
 
 #from utils import get_minmax_array
@@ -37,7 +38,7 @@ class xStream(anomaly.base.AnomalyDetector):
             window_size=25):
         self.streamhash = StreamhashProjector(num_components=num_components)
         deltamax = np.ones(num_components) * 0.5
-        deltamax[np.abs(deltamax) <= 0.0001] = 1.0
+        deltamax[abs(deltamax) <= 0.0001] = 1.0
         self.window_size = window_size
         self.hs_chains = _HSChains(
             deltamax=deltamax,
@@ -46,7 +47,14 @@ class xStream(anomaly.base.AnomalyDetector):
 
         self.step = 0
         self.cur_window = []
-        self.ref_window = None
+    #    self.cur_window = {}
+    #    self.ref_window = None
+        self.ref_window = {}
+
+
+    def merge(dict1, dict2):
+        res = {**dict1, **dict2}
+        return res
 
     def learn_one(self, x, y=None):
         """Fits the model to next instance.
@@ -65,16 +73,20 @@ class xStream(anomaly.base.AnomalyDetector):
     #    x_array = dict2numpy(x)
     #    X = numpy2dict(x_array)
         X = self.streamhash.learn_one(x)
-        x_array = self.streamhash.transform_one(X)
+        X = self.streamhash.transform_one(X)
 
         #X = X.reshape(1, -1)
-        x_array = x_array.reshape(1,-1)
-        self.cur_window.append(x_array)
+    #    x_array = x_array.reshape(1,-1)
+    #    self.cur_window.append(X)
+        self.cur_window.append(X.values)
 
-        self.hs_chains.fit(x_array)
+    #    self.ref_window[self.step] = X
+
+        self.hs_chains.fit(X)
 
         if self.step % self.window_size == 0:
-            self.ref_window = self.cur_window
+        #    self.ref_window = self.cur_window
+            self.ref_window[self.step] = self.cur_window
             self.cur_window = []
             deltamax = self._compute_deltamax()
             self.hs_chains.set_deltamax(deltamax)
@@ -94,20 +106,29 @@ class xStream(anomaly.base.AnomalyDetector):
     #    x_array = dict2numpy(x)
     #    X = numpy2dict(x_array)
         X = self.streamhash.learn_one(x)
-        x_array = self.streamhash.transform_one(X)
+        X = self.streamhash.transform_one(X)
+    #    print(X)
         #X = X.reshape(1, -1)
-        x_array = x_array.reshape(1,-1)
+        #x_array = x_array.reshape(1,-1)
+
+        x_array = dict2numpy(X)
+    #    print(x_array)
         score = self.hs_chains.score(x_array).flatten()
+        #score = self.hs_chains.score(X)
+
 
         return score
 
     def _compute_deltamax(self):
         # mx = np.max(np.concatenate(self.ref_window, axis=0), axis=0)
         # mn = np.min(np.concatenate(self.ref_window, axis=0), axis=0)
-        mn, mx = get_minmax_array(np.concatenate(self.ref_window, axis=0))
+    #    mn, mx = get_minmax_array(np.concatenate(self.ref_window, axis=0))
+        mn, mx = get_minmax_array_dico(self.ref_window)
 
         deltamax = (mx - mn) / 2.0
-        deltamax[np.abs(deltamax) <= 0.0001] = 1.0
+        deltamax[abs(deltamax) <= 0.0001] = 1.0
+
+        print(deltamax)
 
         return deltamax
 

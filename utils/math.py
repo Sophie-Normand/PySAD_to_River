@@ -90,7 +90,7 @@ def _iterate(X, y=None):
     
     """
 
-    iterator = iter_array(shuffle=False)  #IL FAUT IMPORTER ArrayStreamer !!!!
+    iterator = iter_array(shuffle=False)  
 
     if y is None:
         for xi in iterator.iter(X):

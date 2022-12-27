@@ -83,9 +83,11 @@ class AnomalyDetector(base.Estimator):
         The anomalousness scores of the instances in order.
         
         """
+
         y_pred = np.empty(X.shape[0], dtype=np.float)
         for i, (xi, _) in enumerate(_iterate(X)):
             y_pred[i] = self.score_one(xi)
+    
 
         return y_pred
     
