@@ -136,7 +136,7 @@ class xStream(anomaly.base.AnomalyDetector):
     #    deltamax[abs(deltamax) <= 0.0001] = 1.0
 
         dico_min_max = {}
-        for i in range(self.ref_window):
+        for i in range(len(self.ref_window)):
             temp = {(i,feature):self.ref_window[i][feature] for feature in self.ref_window[i].keys()}
             dico_min_max = {**dico_min_max,**temp}
         mn, mx = get_minmax_array_dico(dico_min_max)
@@ -161,8 +161,11 @@ class _Chain:
 #        self.rand_arr = np.random.rand(k)
 #        self.rand_arr = random.random(k)
         self.shift ={}
+        self.rand_arr = []
         for key in self.deltamax.keys():
-            self.shift[key] = random.random() * self.deltamax[key]
+            rnd = random.random()
+            self.shift[key] = rnd * self.deltamax[key]
+            self.rand_arr.append(rnd)
 #        self.shift = self.rand_arr * deltamax
 
         self.is_first_window = True
@@ -172,6 +175,8 @@ class _Chain:
 #        depthcount = np.zeros(len(self.deltamax), dtype=np.int)
         prebins ={}
         depthcount = {}
+        for i in range (len(self.deltamax)):
+            depthcount[i] = 0
         for depth in range(self.depth):
             f = self.fs[depth]
             depthcount[f] += 1
@@ -272,7 +277,6 @@ class _Chain:
                     scores[i, depth] = 0.0
                 else:
                     scores[i, depth] = cmsketch[l_index]
-
         return scores
 
     def score(self, x):
@@ -336,4 +340,5 @@ class _HSChains:
     def set_deltamax(self, deltamax):
         for ch in self.chains:
             ch.deltamax = deltamax
-            ch.shift = ch.rand_arr * deltamax
+            for i in range(len(deltamax)):
+                ch.shift = ch.rand_arr[i] * deltamax[i]
