@@ -8,6 +8,8 @@ from utils.math import get_minmax_array_dico
 from river.utils import dict2numpy
 from river.utils import numpy2dict
 import numpy as np
+import math
+import random
 
 
 from transform.projection.streamhash_projector import StreamhashProjector
@@ -37,8 +39,17 @@ class xStream(anomaly.base.AnomalyDetector):
             depth=25,
             window_size=25):
         self.streamhash = StreamhashProjector(num_components=num_components)
-        deltamax = np.ones(num_components) * 0.5
-        deltamax[abs(deltamax) <= 0.0001] = 1.0
+#        deltamax = np.ones(num_components) * 0.5
+#        deltamax[np.abs(deltamax) <= 0.0001] = 1.0
+        deltamax = {}
+        for i in range (num_components):
+            deltamax[i] = 0.5
+#        deltamax = dict([[i, 0.5] for i in range (num_components)])
+        deltamax = {feature: 1.0 if (value<=0.0001) else value for feature, value in deltamax.items()}
+#        deltamax = [1/2] * num_components
+#        deltamax_abs = [abs(x) for x in deltamax]
+#        deltamax[deltamax_abs[0] <= 0.0001] = 1.0
+        # ECRIRE DELTAMAX SOUS FORME DE DICO
         self.window_size = window_size
         self.hs_chains = _HSChains(
             deltamax=deltamax,
@@ -48,8 +59,7 @@ class xStream(anomaly.base.AnomalyDetector):
         self.step = 0
         self.cur_window = []
     #    self.cur_window = {}
-    #    self.ref_window = None
-        self.ref_window = {}
+        self.ref_window = None
 
 
     def merge(dict1, dict2):
@@ -77,16 +87,14 @@ class xStream(anomaly.base.AnomalyDetector):
 
         #X = X.reshape(1, -1)
     #    x_array = x_array.reshape(1,-1)
-    #    self.cur_window.append(X)
-        self.cur_window.append(X.values)
+        self.cur_window.append(X)
 
     #    self.ref_window[self.step] = X
 
         self.hs_chains.fit(X)
 
         if self.step % self.window_size == 0:
-        #    self.ref_window = self.cur_window
-            self.ref_window[self.step] = self.cur_window
+            self.ref_window = self.cur_window
             self.cur_window = []
             deltamax = self._compute_deltamax()
             self.hs_chains.set_deltamax(deltamax)
@@ -111,9 +119,9 @@ class xStream(anomaly.base.AnomalyDetector):
         #X = X.reshape(1, -1)
         #x_array = x_array.reshape(1,-1)
 
-        x_array = dict2numpy(X)
+    #    x_array = dict2numpy(X)
     #    print(x_array)
-        score = self.hs_chains.score(x_array).flatten()
+        score = self.hs_chains.score(X).flatten()
         #score = self.hs_chains.score(X)
 
 
@@ -123,13 +131,16 @@ class xStream(anomaly.base.AnomalyDetector):
         # mx = np.max(np.concatenate(self.ref_window, axis=0), axis=0)
         # mn = np.min(np.concatenate(self.ref_window, axis=0), axis=0)
     #    mn, mx = get_minmax_array(np.concatenate(self.ref_window, axis=0))
-        mn, mx = get_minmax_array_dico(self.ref_window)
+    #    deltamax = (mx - mn) / 2.0
+    #    deltamax[abs(deltamax) <= 0.0001] = 1.0
 
-        deltamax = (mx - mn) / 2.0
-        deltamax[abs(deltamax) <= 0.0001] = 1.0
-
-        print(deltamax)
-
+        dico_min_max = {}
+        for i in range(self.ref_window):
+            temp = {(i,feature):self.ref_window[i][feature] for feature in self.ref_window[i].keys()}
+            dico_min_max = {**dico_min_max,**temp}
+        mn, mx = get_minmax_array_dico(dico_min_max)
+        deltamax = {key: (mx[key] - mn[key])/2.0 for key in mx.keys()}
+        deltamax = {feature: 1.0 if (value<=0.0001) else value for feature, value in deltamax.items()}
         return deltamax
 
 
@@ -140,33 +151,43 @@ class _Chain:
         k = len(deltamax)
 
         self.depth = depth
-        self.fs = [np.random.randint(0, k) for d in range(depth)]
+#        self.fs = [np.random.randint(0, k) for d in range(depth)]
+        self.fs = [random.randint(0, k) for d in range(depth)]
         self.cmsketches = [{} for i in range(depth)] * depth
         self.cmsketches_cur = [{} for i in range(depth)] * depth
 
         self.deltamax = deltamax  # feature ranges
-        self.rand_arr = np.random.rand(k)
-        self.shift = self.rand_arr * deltamax
+#        self.rand_arr = np.random.rand(k)
+#        self.rand_arr = random.random(k)
+        self.shift ={}
+        for key in self.deltamax.keys():
+            self.shift[key] = random.random() * self.deltamax[key]
+#        self.shift = self.rand_arr * deltamax
 
         self.is_first_window = True
 
     def fit(self, x):								#ajouter fit dans le AnomalyDetector
-        prebins = np.zeros(x.shape, dtype=np.float)
-        depthcount = np.zeros(len(self.deltamax), dtype=np.int)
+#        prebins = np.zeros(x.shape, dtype=np.float)
+#        depthcount = np.zeros(len(self.deltamax), dtype=np.int)
+        prebins ={}
+        depthcount = {}
         for depth in range(self.depth):
             f = self.fs[depth]
             depthcount[f] += 1
 
             if depthcount[f] == 1:
-                prebins[:, f] = (x[:, f] + self.shift[f]) / self.deltamax[f]
+                for j in range(len(x)):
+                    prebins[(j, f)] = (x[f] + self.shift[f]) / self.deltamax[f]
             else:
-                prebins[:, f] = 2.0 * prebins[:, f] - \
+                for j in range(len(x)):
+                    prebins[(j, f)] = 2.0 * prebins[(j, f)] - \
                     self.shift[f] / self.deltamax[f]
 
             if self.is_first_window:
                 cmsketch = self.cmsketches[depth]
                 for prebin in prebins:
-                    l_index = tuple(np.floor(prebin).astype(np.int))
+#                    l_index = tuple(np.floor(prebin).astype(np.int))
+                    l_index = tuple(math.floor(prebin).astype(int))
                     if l_index not in cmsketch:
                         cmsketch[l_index] = 0
                     cmsketch[l_index] += 1
@@ -179,7 +200,8 @@ class _Chain:
                 cmsketch = self.cmsketches_cur[depth]
 
                 for prebin in prebins:
-                    l_index = tuple(np.floor(prebin).astype(np.int))
+#                    l_index = tuple(np.floor(prebin).astype(np.int))
+                    l_index = tuple(math.floor(prebin).astype(int))
                     if l_index not in cmsketch:
                         cmsketch[l_index] = 0
                     cmsketch[l_index] += 1
@@ -189,22 +211,30 @@ class _Chain:
         return self
 
     def bincount(self, x):
-        scores = np.zeros((x.shape[0], self.depth))
-        prebins = np.zeros(x.shape, dtype=np.float)
-        depthcount = np.zeros(len(self.deltamax), dtype=np.int)
+#        scores = np.zeros((x.shape[0], self.depth))
+#        prebins = np.zeros(x.shape, dtype=np.float)
+#        depthcount = np.zeros(len(self.deltamax), dtype=np.int)
+        scores = {}
+        prebins = {}
+        depthcount = {}
+        for i in range (len(self.deltamax)):
+            depthcount[i] = 0
         for depth in range(self.depth):
             f = self.fs[depth]
+
             depthcount[f] += 1
 
             if depthcount[f] == 1:
-                prebins[:, f] = (x[:, f] + self.shift[f]) / self.deltamax[f]
+                for j in range(len(x)):
+                    prebins[(j, f)] = (x[f] + self.shift[f]) / self.deltamax[f]
             else:
-                prebins[:, f] = 2.0 * prebins[:, f] - \
+                for j in range(len(x)):
+                    prebins[(j, f)] = 2.0 * prebins[(j, f)] - \
                     self.shift[f] / self.deltamax[f]
 
             cmsketch = self.cmsketches[depth]
             for i, prebin in enumerate(prebins):
-                l_index = tuple(np.floor(prebin).astype(np.int))
+                l_index = tuple(math.floor(prebin).astype(int))
                 if l_index not in cmsketch:
                     scores[i, depth] = 0.0
                 else:
@@ -216,9 +246,20 @@ class _Chain:
         # scale score logarithmically to avoid overflow:
         #    score = min_d [ log2(bincount x 2^d) = log2(bincount) + d ]
         scores = self.bincount(x)
-        depths = np.array([d for d in range(1, self.depth + 1)])
-        scores = np.log2(1.0 + scores) + depths  # add 1 to avoid log(0)
-        return -np.min(scores, axis=1)
+    #    depths = np.array([d for d in range(1, self.depth + 1)])
+        depths = {}
+        for d in range (1, self.depth +1):
+            depths[d] = d
+        d_1 = dict(map(lambda x: (x[0], math.log2(1 + x[1])), scores.items()))
+        for k in range (len(list(depths.keys()))):
+            for j in range (list(d_1.keys())[-1][0]):
+                d_1[j,k] += depths[k]
+    #    scores = np.log2(1.0 + scores) + depths  # add 1 to avoid log(0)
+        mini = {}
+        for j in range(list(d_1.keys())[-1][0]+1):
+            mini[j] = - min([d_1[i,j] for i in range(list(d_1.keys())[-1][1]+1)])
+        return mini
+    #    return -np.min(scores, axis=1)
 
     def next_window(self):
         self.is_first_window = False
@@ -238,7 +279,8 @@ class _HSChains:
             self.chains.append(c)
 
     def score(self, x):
-        scores = np.zeros(x.shape[0])
+    #    scores = np.zeros(x.shape[0])
+        scores = []
         for ch in self.chains:
             scores += ch.score(x)
 
