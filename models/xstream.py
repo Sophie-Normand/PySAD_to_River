@@ -121,7 +121,8 @@ class xStream(anomaly.base.AnomalyDetector):
 
     #    x_array = dict2numpy(X)
     #    print(x_array)
-        score = self.hs_chains.score(X).flatten()
+    #    score = self.hs_chains.score(X).flatten()
+        score = self.hs_chains.score(X)
         #score = self.hs_chains.score(X)
 
 
@@ -152,7 +153,7 @@ class _Chain:
 
         self.depth = depth
 #        self.fs = [np.random.randint(0, k) for d in range(depth)]
-        self.fs = [random.randint(0, k) for d in range(depth)]
+        self.fs = [random.randint(0, k-1) for d in range(depth)]
         self.cmsketches = [{} for i in range(depth)] * depth
         self.cmsketches_cur = [{} for i in range(depth)] * depth
 
@@ -185,9 +186,19 @@ class _Chain:
 
             if self.is_first_window:
                 cmsketch = self.cmsketches[depth]
-                for prebin in prebins:
+                
+                key_0 = []
+                key_1 = []
+                for t in range(list(prebins.keys())[-1][0]+1):
+                    key_0.append(t)
+                for t in range(list(prebins.keys())[-1][1]+1):
+                    key_1.append(t)
+                for i in range(len(key_0)):
+                    l_index = tuple(list(prebins.values())[i::len(key_1)])
+
+                #for prebin in prebins:
 #                    l_index = tuple(np.floor(prebin).astype(np.int))
-                    l_index = tuple(math.floor(prebin).astype(int))
+                #    l_index = tuple(math.floor(prebin).astype(int))
                     if l_index not in cmsketch:
                         cmsketch[l_index] = 0
                     cmsketch[l_index] += 1
@@ -199,9 +210,17 @@ class _Chain:
             else:
                 cmsketch = self.cmsketches_cur[depth]
 
-                for prebin in prebins:
+#                for prebin in prebins:
 #                    l_index = tuple(np.floor(prebin).astype(np.int))
-                    l_index = tuple(math.floor(prebin).astype(int))
+#                    l_index = tuple(math.floor(prebin).astype(int))
+                key_0 = []
+                key_1 = []
+                for t in range(list(prebins.keys())[-1][0]+1):
+                    key_0.append(t)
+                for t in range(list(prebins.keys())[-1][1]+1):
+                    key_1.append(t)
+                for i in range(len(key_0)):
+                    l_index = tuple(list(prebins.values())[i::len(key_1)])
                     if l_index not in cmsketch:
                         cmsketch[l_index] = 0
                     cmsketch[l_index] += 1
@@ -219,6 +238,7 @@ class _Chain:
         depthcount = {}
         for i in range (len(self.deltamax)):
             depthcount[i] = 0
+
         for depth in range(self.depth):
             f = self.fs[depth]
 
@@ -233,8 +253,21 @@ class _Chain:
                     self.shift[f] / self.deltamax[f]
 
             cmsketch = self.cmsketches[depth]
-            for i, prebin in enumerate(prebins):
-                l_index = tuple(math.floor(prebin).astype(int))
+
+            for key in prebins:
+                prebins[key] = math.floor(prebins[key])
+
+            key_0 = []
+            key_1 = []
+            for t in range(list(prebins.keys())[-1][0]+1):
+                key_0.append(t)
+            for t in range(list(prebins.keys())[-1][1]+1):
+                key_1.append(t)
+            for i in range(len(key_0)):
+                l_index = tuple(list(prebins.values())[i::len(key_1)])
+
+    #        for i, prebin in enumerate(prebins):
+    #            l_index = tuple(math.floor(prebin).astype(int))
                 if l_index not in cmsketch:
                     scores[i, depth] = 0.0
                 else:
@@ -248,16 +281,19 @@ class _Chain:
         scores = self.bincount(x)
     #    depths = np.array([d for d in range(1, self.depth + 1)])
         depths = {}
+    #    for d in range (self.depth):
         for d in range (1, self.depth +1):
-            depths[d] = d
+            depths[d-1] = d
         d_1 = dict(map(lambda x: (x[0], math.log2(1 + x[1])), scores.items()))
         for k in range (len(list(depths.keys()))):
             for j in range (list(d_1.keys())[-1][0]):
                 d_1[j,k] += depths[k]
     #    scores = np.log2(1.0 + scores) + depths  # add 1 to avoid log(0)
         mini = {}
-        for j in range(list(d_1.keys())[-1][0]+1):
-            mini[j] = - min([d_1[i,j] for i in range(list(d_1.keys())[-1][1]+1)])
+    #    print(list(d_1.keys())[-1][0])
+        for j in range(list(d_1.keys())[-1][0]):
+            mini[j] = - min([d_1[j,i] for i in range(list(d_1.keys())[-1][1]+1)])
+    #    print(mini)
         return mini
     #    return -np.min(scores, axis=1)
 
@@ -283,8 +319,10 @@ class _HSChains:
         scores = []
         for ch in self.chains:
             scores += ch.score(x)
+        
+        scores = [elt/float(self.nchains) for elt in scores]
 
-        scores /= float(self.nchains)
+    #    scores /= float(self.nchains)
         return scores
 
     def fit(self, x):
