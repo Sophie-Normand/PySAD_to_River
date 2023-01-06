@@ -4,13 +4,12 @@ from utils.math import get_minmax_array
 #import math     #import math pour utiliser get_minmax_array
 
 #from utils import get_minmax_array
-from river.utils import dict2numpy
 import numpy as np
+np.random.seed(14)
 
 
 from transform.projection.streamhash_projector_old import StreamhashProjector
 #from pysad.utils import get_minmax_array
-
 
 class xStream_old(anomaly.base.AnomalyDetector):
     """The xStream model for row-streaming data :cite:`xstream`. It first projects the data via streamhash projection. It then fits half space chains by reference windowing. It scores the instances using the window fitted to the reference window.
@@ -40,6 +39,7 @@ class xStream_old(anomaly.base.AnomalyDetector):
         self.cur_window = []
         self.ref_window = None
 
+
     def learn_one(self, x, y=None):
         """Fits the model to next instance.
         Args:
@@ -51,7 +51,7 @@ class xStream_old(anomaly.base.AnomalyDetector):
         self.step += 1
 
         #X = self.streamhash.learn_transform_one(X)
-        x_array = dict2numpy(x)
+        x_array = np.asarray(list(x.values()))
         x_array = self.streamhash.learn_transform_one(x_array)
 
         #X = X.reshape(1, -1)
@@ -76,9 +76,10 @@ class xStream_old(anomaly.base.AnomalyDetector):
         Returns:
             score (float): The anomalousness score of the input instance.
         """
-        x_array = dict2numpy(x)
+        x_array = np.asarray(list(x.values()))
         x_array = self.streamhash.learn_transform_one(x_array)
         #X = X.reshape(1, -1)
+        #print(x_array)
         x_array = x_array.reshape(1,-1)
         score = self.hs_chains.score(x_array).flatten()
 
@@ -114,6 +115,11 @@ class _Chain:
         self.shift = self.rand_arr * deltamax
 
         self.is_first_window = True
+        #print('depth',self.depth)
+        #print('fs',self.fs)
+        #print('cmsketches',self.cmsketches)
+        #print('deltamax',self.deltamax)
+        #print('shift',self.shift)
 
     def fit(self, x):								#ajouter fit dans le AnomalyDetector
         prebins = np.zeros(x.shape, dtype=np.float)
@@ -156,7 +162,9 @@ class _Chain:
     def bincount(self, x):
         scores = np.zeros((x.shape[0], self.depth))
         prebins = np.zeros(x.shape, dtype=np.float)
+        #print(x.shape)
         depthcount = np.zeros(len(self.deltamax), dtype=np.int)
+        #print(depthcount)
         for depth in range(self.depth):
             f = self.fs[depth]
             depthcount[f] += 1
@@ -174,15 +182,19 @@ class _Chain:
                     scores[i, depth] = 0.0
                 else:
                     scores[i, depth] = cmsketch[l_index]
-
+        print("scores :",scores, scores.shape)
+        #print("prebins :",prebins, prebins.shape)
+        #print("depthcount :",depthcount, depthcount.shape)
         return scores
 
     def score(self, x):
         # scale score logarithmically to avoid overflow:
         #    score = min_d [ log2(bincount x 2^d) = log2(bincount) + d ]
         scores = self.bincount(x)
+        #print(scores)
         depths = np.array([d for d in range(1, self.depth + 1)])
         scores = np.log2(1.0 + scores) + depths  # add 1 to avoid log(0)
+        print('min',-np.min(scores, axis=1))
         return -np.min(scores, axis=1)
 
     def next_window(self):
