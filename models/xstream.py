@@ -1,6 +1,6 @@
 import anomaly
         
-from utils.math import get_minmax_array_dico
+from utils.math import get_minmax, merge, dict_zeros
 
 import math
 import random
@@ -14,7 +14,7 @@ class xStream(anomaly.base.AnomalyDetector):
     
     Parameters
     ----------
-    n_components
+    num_components
         Number of components for streamhash projection (Default=100).
     n_chains
         Number of half-space chains (Default=100).
@@ -46,11 +46,6 @@ class xStream(anomaly.base.AnomalyDetector):
         self.cur_window = []
         self.ref_window = None
 
-
-
-    def merge(dict1, dict2):
-        res = {**dict1, **dict2}
-        return res
 
     def learn_one(self, x, y=None):
         """Fits the model to next instance.
@@ -99,8 +94,8 @@ class xStream(anomaly.base.AnomalyDetector):
         dico_min_max = {}
         for i in range(len(self.ref_window)):
             temp = {(i,feature):self.ref_window[i][feature] for feature in self.ref_window[i].keys()}
-            dico_min_max = {**dico_min_max,**temp}
-        mn, mx = get_minmax_array_dico(dico_min_max)
+            dico_min_max = merge(dico_min_max,temp)
+        mn, mx = get_minmax(dico_min_max)
         deltamax = {key: (mx[key] - mn[key])/2.0 for key in mx.keys()}
         deltamax = {feature: 1.0 if (value<=0.0001) else value for feature, value in deltamax.items()}
         return deltamax
@@ -128,11 +123,9 @@ class _Chain:
 
     def fit(self, x):
         prebins ={}
+        dict_zeros(prebins, len(x))
         depthcount = {}
-        for i in range(len(self.deltamax)):
-            depthcount[i] = 0
-        for i in range(len(x)):
-            prebins[i] = 0
+        dict_zeros(depthcount, len(self.deltamax))
         
         for depth in range(self.depth):
             f = self.fs[depth]
@@ -175,14 +168,12 @@ class _Chain:
 
     def bincount(self, x):
         scores = {}
+        dict_zeros(scores, self.depth)
         prebins = {}
+        dict_zeros(prebins, len(x))
         depthcount = {}
-        for i in range(len(self.deltamax)):
-            depthcount[i] = 0
-        for i in range(len(x)):
-            prebins[i] = 0
-        for i in range(self.depth):
-            scores[i] = 0
+        dict_zeros(depthcount, len(self.deltamax))
+
         for depth in range(self.depth):
             f = self.fs[depth]
             depthcount[f] += 1
@@ -222,6 +213,18 @@ class _Chain:
 
 
 class _HSChains:
+    """The Half-Space Chains approximates the density by computing neighborhood-counts at multiple scales.
+    
+    Parameters
+    ----------
+    deltamax
+    n_chains
+        Number of half-space chains (Default=100).
+    depth
+        Maximum depth for the chains (Default=25).
+    
+    """
+
     def __init__(self, deltamax, n_chains=100, depth=25):
         self.nchains = n_chains
         self.depth = depth

@@ -1,6 +1,6 @@
 """Shared utility classes and functions"""
 #from . import math
-from .math import get_minmax_array, get_minmax_array_dico, _iterate
+from .math import get_minmax_array, get_minmax, _iterate, merge, dict_zeros
 #from . import inspect, math, pretty, random, skmultiflow_utils
 #from .context_managers import log_method_calls
 #from .data_conversion import dict2numpy, numpy2dict
