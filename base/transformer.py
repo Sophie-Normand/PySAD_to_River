@@ -8,8 +8,8 @@ if typing.TYPE_CHECKING:
 
 
 class BaseTransformer:
-    def __init__(self, output_dims):
-        self.output_dims = output_dims
+    #def __init__(self, output_dims):
+    #    self.output_dims = output_dims
 
     def __add__(self, other):
         """Fuses with another Transformer into a TransformerUnion."""
