@@ -12,16 +12,20 @@ class LODA(anomaly.base.AnomalyDetector):
         
     def learn_one(self, x, y=None):
         """Fits the model to next instance.
-        Args:
-            X (np.float array of shape (num_features,)): The instance to fit.
-            y (int): Ignored since the model is unsupervised (Default=None).
-        Returns:
+        
+        Parameters
+        ----------
+        X
+            The instance to fit (np.float array of shape (num_features,)).
+        y 
+            Ignored since the model is unsupervised (Default=None).
+            
+        Returns
+        -------
             object: Returns the self.
         """
 
-        #X = X.reshape(1, -1)
-        x_array = utils.dict2numpy(x)
-        #print(x_array.shape)
+        x_array = np.array(list(x.values()))
         
         if self.to_init:
             self.num_features = x_array.shape[0]
@@ -48,12 +52,19 @@ class LODA(anomaly.base.AnomalyDetector):
         
     def score_one(self, x):
         """Scores the anomalousness of the next instance.
-        Args:
-            X (np.float array of shape (num_features,)): The instance to score. Higher scores represent more anomalous instances whereas lower scores correspond to more normal instances.
-        Returns:
+        
+        Parameters
+        ----------
+        X
+            The instance to score. Higher scores represent more anomalous instances whereas lower scores correspond to more normal instances (np.float array of shape (num_features,)).
+            
+        Returns
+        -------
             float: The anomalousness score of the input instance.
         """
-        x_array = utils.dict2numpy(x)
+        
+        x_array = np.array(list(x.values()))
+        
         if self.to_init:
             self.num_features = x_array.shape[0]
             self.weights = np.ones(self.n_random_cuts,dtype=np.float) / self.n_random_cuts

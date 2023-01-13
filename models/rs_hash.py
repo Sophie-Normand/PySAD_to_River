@@ -1,17 +1,23 @@
 import anomaly
 import numpy as np
 
-from river.utils import dict2numpy
-
 class RSHash(anomaly.base.AnomalyDetector):
-    """Subspace outlier detection in linear time with randomized hashing :cite:`sathe2016subspace`. This implementation is adapted from `cmuxstream-baselines <https://github.com/cmuxstream/cmuxstream-baselines/blob/master/Dynamic/RS_Hash/sparse_stream_RSHash.py>`_.
-        Args:
-            feature_mins (np.float array of shape (num_features,)): Minimum boundary of the features.
-            feature_maxes (np.float array of shape (num_features,)): Maximum boundary of the features.
-            sampling_points (int): The number of sampling points (Default=1000).
-            decay (float): The decay hyperparameter (Default=0.015).
-            num_components (int): The number of ensemble components (Default=100).
-            num_hash_fns (int): The number of hashing functions (Default=1).
+    """Subspace outlier detection in linear time with randomized hashing :cite:`sathe2016subspace`. This implementation is adapted from `cmuxstream-baselines <https://github.com/cmuxstream/cmuxstream-baselines/blob/master/Dynamic/RS_Hash/sparse_stream_RSHash.py>` (PySAD), re-adapted to fit the River_API (learn_one/predict_one)
+    
+    Parameters
+    ----------
+    feature_mins
+        Minimum boundary of the features (np.float array of shape (num_features,)).
+    feature_maxes 
+       Maximum boundary of the features (np.float array of shape (num_features,)).
+    sampling_points 
+        The number of sampling points (Default=1000).
+    decay
+        The decay hyperparameter (Default=0.015).
+    num_components
+        The number of ensemble components (Default=100).
+    num_hash_fns
+        The number of hashing functions (Default=1).
     """
 
     def __init__(
@@ -51,13 +57,19 @@ class RSHash(anomaly.base.AnomalyDetector):
 
     def learn_one(self, x, y=None):
         """Fits the model to next instance.
-        Args:
-            X (np.float array of shape (num_features,)): The instance to fit.
-            y (int): Ignored since the model is unsupervised (Default=None).
-        Returns:
+        
+        Parameters
+        ----------
+            X
+                The instance to fit (np.float array of shape (num_features,)).
+            y
+                Ignored since the model is unsupervised (Default=None).
+                
+        Returns
+        -------
             object: Returns the self.
         """
-        x_array = dict2numpy(x)
+        x_array = np.array(list(x.values()))
         x_array = x_array.reshape(-1,1).flatten()
         
         score_instance = 0
@@ -97,10 +109,15 @@ class RSHash(anomaly.base.AnomalyDetector):
         return self
 
     def score_one(self, X):
-        """Scores the anomalousness of the next instance. Outputs the last score. Note that this method must be called after the fit_partial
-        Args:
-            X (any): Ignored.
-        Returns:
+        """Scores the anomalousness of the next instance. Outputs the last score. Note that this method must be called after the learn_one (River compatibility ?).
+        
+        Parameters
+        ----------
+            X
+                (any): Ignored.
+            
+        Returns
+        -------
             float: The anomalousness score of the last fitted instance.
         """
         return self.last_score
